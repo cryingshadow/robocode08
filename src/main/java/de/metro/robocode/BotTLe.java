@@ -7,23 +7,22 @@ import robocode.ScannedRobotEvent;
 
 public class BotTLe extends Robot {
 
-    private final boolean activeFireMode = false;
-
     @Override
     public void run() {
 
         final double radius = 100.0;
         final double angle = 90.0;
-        final double turnVar = 23.0;
+        final double turnVar = 17.0;
 
         while (true) {
-            if ( Math.random() < 0.3 ) {
+            if ( Math.random() < 0.7 ) {
                 scanRound();
             }
 
-            ahead(radius);
+            ahead( radius );
 
-            if ( Math.random() < 0.4 ) {
+            //if ( Math.random() < 0.8 )
+            {
                 if ( Math.random() < 0.5 ) {
                     turnLeft( angle + turnVar * ( 0.5 - Math.random() ) );
                 } else {
@@ -31,10 +30,6 @@ public class BotTLe extends Robot {
                 }
             }
 
-            //turnLeft(angle);
-            //turnGunLeft(angle);
-
-            //fireBullet(getEnergy());
         }
     }
 
@@ -44,42 +39,54 @@ public class BotTLe extends Robot {
 
     @Override
     public void onScannedRobot(final ScannedRobotEvent e) {
-        final double spreadAngle = 10.0;
-        final double numShots = 3.0;
+        final double energy = getEnergy();
+        final double firePower = Math.max( 1.0, energy / 35.0 );
 
-        final double step = spreadAngle / numShots;
-
-        turnGunLeft( -5 );
-
-        //        final double bearing = e.getBearing();
-        //        final double head = getHeading();
-        //        final double gHead = getGunHeading();
-        //
-        //        turnGunRight( bearing - head );
-
-
-
-        //        final double sr = e.getHeading();
-        //        final double me = getHeading();
-        //        final double da = sr - me;
-        //
-        //        if ( da < 0 ) {
-        //            turnLeft( 90 - da );
+        //        if ( energy < 30 ) {
+        //            fire( 1 );
         //        } else {
-        //            turnRight( 90 - da );
+        //            spreadFire( energy );
         //        }
-        //
-        //        fire( 1 );
+        fire( firePower );
+        final double bearing = e.getBearing();
 
-        //turnGunLeft( e.getHeading() );
+        if ( bearing <= 0 ) {
+            turnLeft( Math.abs( bearing ) );
+        } else {
+            turnRight( bearing );
+        }
+
+        scan();
+    }
+
+    private void spreadFire( final double energy ) {
+        final double spreadAngle = energy > 70
+            ? 20.0
+            : 10;
+        final double numShots = energy > 70
+            ? 5.0
+            : 3.0;
+        final double step = spreadAngle / Math.max( 1, numShots - 1 );
+
+        turnGunLeft( spreadAngle / 2.0 );
         fire( 1 );
 
+        for ( int i = 0; i < numShots; i++ ) {
+            turnGunRight( step );
+            fire( 1 );
+        }
     }
+
 
     @Override
     public void onHitByBullet(final HitByBulletEvent e) {
-        //e.getHeading();
-        //turnLeft(90 - e.getBearing());
+        if ( Math.random() < 0.5 ) {
+            turnLeft( 90 - e.getBearing() );
+        } else {
+            turnRight( 90 - e.getBearing() );
+        }
+
+        ahead( 100.0 );
     }
 
     @Override
